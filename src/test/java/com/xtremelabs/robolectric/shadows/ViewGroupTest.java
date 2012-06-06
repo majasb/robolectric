@@ -39,31 +39,40 @@ public class ViewGroupTest {
 
     @Before
     public void setUp() throws Exception {
-        context = new Application();
-        ShadowApplication.bind(context, new ResourceLoader(10, R.class, null, null));
+        try {
+            context = new Application();
+            ShadowApplication.bind(context, new ResourceLoader(10, R.class, null, null));
 
-        root = new FrameLayout(context);
+            root = new FrameLayout(context);
 
-        child1 = new View(context);
-        child2 = new View(context);
-        child3 = new FrameLayout(context);
-        child3a = new View(context);
-        child3b = new View(context);
+            child1 = new View(context);
+            child2 = new View(context);
+            child3 = new FrameLayout(context);
+            child3a = new View(context);
+            child3b = new View(context);
 
-        root.addView(child1);
-        root.addView(child2);
-        root.addView(child3);
+            root.addView(child1);
+            root.addView(child2);
+            root.addView(child3);
 
-        child3.addView(child3a);
-        child3.addView(child3b);
+            child3.addView(child3a);
+            child3.addView(child3b);
 
-        defaultLineSeparator = System.getProperty("line.separator");
-        System.setProperty("line.separator", "\n");
+            defaultLineSeparator = System.getProperty("line.separator");
+            System.setProperty("line.separator", "\n");
+        } catch (Exception e) {
+            e.printStackTrace(); // for some reason, the stack trace is not logged by the test runner
+            throw e;
+        }
     }
 
     @After
     public void tearDown() throws Exception {
-        System.setProperty("line.separator", defaultLineSeparator);
+        if (defaultLineSeparator != null) {
+            System.setProperty("line.separator", defaultLineSeparator);
+        } else {
+            System.clearProperty("line.separator");
+        }
     }
 
     @Test

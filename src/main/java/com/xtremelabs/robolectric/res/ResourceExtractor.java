@@ -37,8 +37,9 @@ public class ResourceExtractor {
                             localResourceStringToId.put(name, value);
                         }
 
-                        if (resourceIdToString.containsKey(value)) {
-                            throw new RuntimeException(value + " is already defined with name: " + resourceIdToString.get(value) + " can't also call it: " + name);
+                        if (resourceIdToString.containsKey(value) && !resourceIdToString.get(value).equals(name)) {
+                            throw new RuntimeException(value + " is already defined with name: "
+                                                           + resourceIdToString.get(value) + " can't also call it: " + name);
                         }
                         resourceIdToString.put(value, name);
                     }
