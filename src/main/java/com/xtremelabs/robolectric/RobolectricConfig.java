@@ -11,6 +11,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static android.content.pm.ApplicationInfo.*;
@@ -19,6 +20,7 @@ import static com.xtremelabs.robolectric.Robolectric.DEFAULT_SDK_VERSION;
 public class RobolectricConfig {
     private final File androidManifestFile;
     private final File resourceDirectory;
+    private final List<File> libraryResourceDirectories;
     private final File assetsDirectory;
     private String rClassName;
     private String packageName;
@@ -43,11 +45,11 @@ public class RobolectricConfig {
      * @param baseDir the base directory of your Android project
      */
     public RobolectricConfig(final File baseDir) {
-        this(new File(baseDir, "AndroidManifest.xml"), new File(baseDir, "res"), new File(baseDir, "assets"));
+        this(getManifestFile(baseDir), getResourceDir(baseDir), getAssetsDir(baseDir));
     }
 
     public RobolectricConfig(final File androidManifestFile, final File resourceDirectory) {
-        this(androidManifestFile, resourceDirectory, new File(resourceDirectory.getParent(), "assets"));
+        this(androidManifestFile, resourceDirectory, getAssetsDir(resourceDirectory.getParentFile()));
     }
 
     /**
@@ -58,9 +60,62 @@ public class RobolectricConfig {
      * @param assetsDirectory     location of the assets directory
      */
     public RobolectricConfig(final File androidManifestFile, final File resourceDirectory, final File assetsDirectory) {
+        this(androidManifestFile, resourceDirectory, assetsDirectory, Collections.<File>emptyList());
+    }
+
+    /**
+     * Creates a Robolectric configuration using default Android files relative to the specified base directory.
+     * <p/>
+     * The manifest will be baseDir/AndroidManifest.xml, res will be baseDir/res, and assets in baseDir/assets.
+     *
+     * @param baseDir the base directory of your Android project
+     * @param libraryBaseDirs base directories of android library projects
+     */
+    public RobolectricConfig(final File baseDir, final List<File> libraryBaseDirs) {
+        this(getManifestFile(baseDir), getResourceDir(baseDir), getAssetsDir(baseDir),
+             getResourceDirs(libraryBaseDirs));
+    }
+
+    public RobolectricConfig(final File androidManifestFile, final File resourceDirectory,
+                             final List<File> libraryResourceSirectories) {
+        this(androidManifestFile, resourceDirectory, getAssetsDir(resourceDirectory.getParentFile()),
+             libraryResourceSirectories);
+    }
+
+    /**
+     * Creates a Robolectric configuration using specified locations.
+     *
+     * @param androidManifestFile location of the AndroidManifest.xml file
+     * @param resourceDirectory   location of the res directory
+     * @param assetsDirectory     location of the assets directory
+     * @param libraryResourceDirectories location of the resource directories of android library projects
+     */
+    public RobolectricConfig(final File androidManifestFile, final File resourceDirectory, final File assetsDirectory,
+                             final List<File> libraryResourceDirectories) {
         this.androidManifestFile = androidManifestFile;
         this.resourceDirectory = resourceDirectory;
         this.assetsDirectory = assetsDirectory;
+        this.libraryResourceDirectories = Collections.unmodifiableList(new ArrayList<File>(libraryResourceDirectories));
+    }
+
+    private static File getManifestFile(File baseDir) {
+        return new File(baseDir, "AndroidManifest.xml");
+    }
+
+    private static List<File> getResourceDirs(List<File> libraryBaseDirs) {
+        List<File> dirs = new ArrayList<File>();
+        for (File libraryBaseDir : libraryBaseDirs) {
+            dirs.add(getResourceDir(libraryBaseDir));
+        }
+        return dirs;
+    }
+
+    private static File getResourceDir(File baseDir) {
+        return new File(baseDir, "res");
+    }
+
+    private static File getAssetsDir(File baseDir) {
+        return new File(baseDir, "assets");
     }
 
     public String getRClassName() throws Exception {
@@ -226,6 +281,10 @@ public class RobolectricConfig {
 
     public File getAssetsDirectory() {
         return assetsDirectory;
+    }
+
+    public List<File> getLibraryResourceDirectories() {
+        return libraryResourceDirectories;
     }
 
     public int getReceiverCount() {

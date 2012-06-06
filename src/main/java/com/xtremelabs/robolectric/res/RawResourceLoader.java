@@ -8,39 +8,52 @@ import java.io.InputStream;
 public class RawResourceLoader {
 
     private ResourceExtractor resourceExtractor;
-    private File resourceDir;
+    private ResourceDirs resourceDirs;
 
     public RawResourceLoader(ResourceExtractor resourceExtractor, File resourceDir) {
+        this(resourceExtractor, new ResourceDirs(resourceDir));
+    }
+
+    public RawResourceLoader(ResourceExtractor resourceExtractor, ResourceDirs resourceDirs) {
         this.resourceExtractor = resourceExtractor;
-        this.resourceDir = resourceDir;
+        this.resourceDirs = resourceDirs;
     }
 
     public InputStream getValue(int resourceId) {
         String resourceFileName = resourceExtractor.getResourceName(resourceId);
+        if (resourceFileName == null) {
+            throw new IllegalArgumentException("No resource " + toHex(resourceId));
+        }
         String resourceName = resourceFileName.substring("/raw".length());
 
-        File rawResourceDir = new File(resourceDir, "raw");
+        for (File resourceDir : resourceDirs.getDirs()) {
+            File rawResourceDir = new File(resourceDir, "raw");
 
-        try {
-            File[] files = rawResourceDir.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                File file = files[i];
-                String name = file.getName();
-                int dotIndex = name.indexOf(".");
-                String fileBaseName = null;
-                if (dotIndex >= 0) {
-                    fileBaseName = name.substring(0, dotIndex);
-                } else {
-                    fileBaseName = name;
+            try {
+                File[] files = rawResourceDir.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    String name = file.getName();
+                    int dotIndex = name.indexOf(".");
+                    final String fileBaseName;
+                    if (dotIndex >= 0) {
+                        fileBaseName = name.substring(0, dotIndex);
+                    } else {
+                        fileBaseName = name;
+                    }
+                    if (fileBaseName.equals(resourceName)) {
+                        return new FileInputStream(file);
+                    }
                 }
-                if (fileBaseName.equals(resourceName)) {
-                    return new FileInputStream(file);
-                }
+            } catch (FileNotFoundException e) {
+                return null;
             }
-        } catch (FileNotFoundException e) {
-            return null;
         }
         return null;
+    }
+
+    private static String toHex(int resourceId) {
+        return "0x" + Integer.toHexString(resourceId);
     }
 
 }

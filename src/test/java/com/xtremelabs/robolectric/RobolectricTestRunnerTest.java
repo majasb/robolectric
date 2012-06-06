@@ -71,11 +71,10 @@ public class RobolectricTestRunnerTest {
     		tv.setText("Foo");
     		fail("TextView#setText(String) should produce an i18nException");
     	} catch (Exception e) {
-    		// Compare exception name because it was loaded in the instrumented classloader
-    		assertEquals("com.xtremelabs.robolectric.util.I18nException", e.getClass().getName());
-    	}
+            assertI18nException(e);
+        }
     }
-    
+
     @Test
     @EnableStrictI18n
     public void createResourceLoader_setsI18nStrictModeForResourceLoader() {
@@ -86,10 +85,16 @@ public class RobolectricTestRunnerTest {
     		loader.inflateView(Robolectric.application, R.layout.text_views, null);
     		fail("ResourceLoader#inflateView should produce an i18nException");
     	} catch (Exception e) {
-    		assertEquals("com.xtremelabs.robolectric.util.I18nException", e.getClass().getName());
+    		assertI18nException(e);
     	}
     }
-    
+
+    private void assertI18nException(Exception e) {
+        //e.printStackTrace();
+        // Compare exception name because it was loaded in the instrumented classloader
+        assertEquals("com.xtremelabs.robolectric.util.I18nException", e.getClass().getName());
+    }
+
     public static class RunnerForTesting extends WithTestDefaultsRunner {
     	public static RunnerForTesting instance;
  
