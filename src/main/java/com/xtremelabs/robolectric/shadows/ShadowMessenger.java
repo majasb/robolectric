@@ -6,6 +6,7 @@ import com.xtremelabs.robolectric.internal.RealObject;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -21,7 +22,10 @@ public class ShadowMessenger {
 
     @Implementation
     public void send(Message message) throws RemoteException {
-        message.setTarget(handler);
-        message.sendToTarget();
+        if (handler != null) {
+            message.setTarget(handler);
+            message.sendToTarget();
+        }
     }
+
 }
