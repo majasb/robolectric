@@ -137,7 +137,7 @@ public class ResourceLoader {
 				loadMenuResources(resourceDirs);
 				loadDrawableResources(resourceDirs);
 				loadPreferenceResources( preferenceDirs );
-				
+
 				listNinePatchResources(ninePatchDrawableIds, resourceDirs);
 			} else {
 				viewLoader = null;
