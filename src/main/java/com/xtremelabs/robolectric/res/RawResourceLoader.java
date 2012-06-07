@@ -31,18 +31,19 @@ public class RawResourceLoader {
 
             try {
                 File[] files = rawResourceDir.listFiles();
-                for (int i = 0; i < files.length; i++) {
-                    File file = files[i];
-                    String name = file.getName();
-                    int dotIndex = name.indexOf(".");
-                    final String fileBaseName;
-                    if (dotIndex >= 0) {
-                        fileBaseName = name.substring(0, dotIndex);
-                    } else {
-                        fileBaseName = name;
-                    }
-                    if (fileBaseName.equals(resourceName)) {
-                        return new FileInputStream(file);
+                if (files != null) {
+                    for (File file : files) {
+                        String name = file.getName();
+                        int dotIndex = name.indexOf(".");
+                        final String fileBaseName;
+                        if (dotIndex >= 0) {
+                            fileBaseName = name.substring(0, dotIndex);
+                        } else {
+                            fileBaseName = name;
+                        }
+                        if (fileBaseName.equals(resourceName)) {
+                            return new FileInputStream(file);
+                        }
                     }
                 }
             } catch (FileNotFoundException e) {
