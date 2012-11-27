@@ -34,11 +34,9 @@ public class ResourceDirs {
     }
 
     private static List<File> combine(File resourceDir, List<File> libraryResourceDirs) {
-        if (resourceDir == null) {
-            throw new IllegalArgumentException("Need a resource directory");
-        }
         List<File> allDirs = new ArrayList<File>();
-        allDirs.add(resourceDir);
+        if (resourceDir != null)
+            allDirs.add(resourceDir);
         allDirs.addAll(libraryResourceDirs);
         return allDirs;
     }

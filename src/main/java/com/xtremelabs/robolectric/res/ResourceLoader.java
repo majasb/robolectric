@@ -83,7 +83,7 @@ public class ResourceLoader {
 		stringArrayResourceLoader = new StringArrayResourceLoader( resourceExtractor, stringResourceLoader );
 		colorResourceLoader = new ColorResourceLoader( resourceExtractor );
 		attrResourceLoader = new AttrResourceLoader( resourceExtractor );
-		drawableResourceLoader = new DrawableResourceLoader( resourceExtractor, resourceDir );
+		drawableResourceLoader = new DrawableResourceLoader( resourceExtractor);
 		rawResourceLoader = new RawResourceLoader( resourceExtractor, resourceDir );
 		dimenResourceLoader = new DimenResourceLoader( resourceExtractor );
 		integerResourceLoader = new IntegerResourceLoader( resourceExtractor );
