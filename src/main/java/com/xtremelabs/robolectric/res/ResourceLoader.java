@@ -73,7 +73,7 @@ public class ResourceLoader {
 		this.sdkVersion = sdkVersion;
 		this.assetsDir = assetsDir;
 		this.rClass = rClass;
-		
+
 		resourceExtractor = new ResourceExtractor();
 		resourceExtractor.addLocalRClass( rClass );
 		resourceExtractor.addSystemRClass( R.class );
@@ -144,7 +144,7 @@ public class ResourceLoader {
 				loadDrawableResources( resourceDir );
 				loadPreferenceResources( preferenceDir );
 				loadXmlFileResources( preferenceDir );
-				
+
 				listNinePatchResources(ninePatchDrawableIds, resourceDir);
 			} else {
 				viewLoader = null;
@@ -166,12 +166,12 @@ public class ResourceLoader {
 	 * @param locale
 	 */
 	public void reloadValuesResouces( String qualifiers ) {
-		
+
 		File systemResourceDir = getSystemResourceDir( getPathToAndroidResources() );
 		File localValueResourceDir = getValueResourceDir( resourceDir, qualifiers, true );
 		File systemValueResourceDir = getValueResourceDir( systemResourceDir, null, false );
 		File preferenceDir = getPreferenceResourceDir( resourceDir );
-		
+
 		try {
 			loadStringResources( localValueResourceDir, systemValueResourceDir );
 			loadPluralsResources( localValueResourceDir, systemValueResourceDir );
@@ -182,9 +182,9 @@ public class ResourceLoader {
 			loadPreferenceResources( preferenceDir );
 		} catch ( Exception e ) {
 			throw new RuntimeException( e );
-		} 
+		}
 	}
-	
+
 	private File getSystemResourceDir( String pathToAndroidResources ) {
 		return pathToAndroidResources != null ? new File( pathToAndroidResources ) : null;
 	}
@@ -237,13 +237,13 @@ public class ResourceLoader {
 			preferenceDocumentLoader.loadResourceXmlDir( xmlResourceDir );
 		}
 	}
-	
+
 	/**
-	 * All the Xml files should be loaded. 
+	 * All the Xml files should be loaded.
 	 */
 	private void loadXmlFileResources( File xmlResourceDir ) throws Exception {
 		if ( xmlResourceDir.exists() ) {
-			DocumentLoader xmlFileDocumentLoader = 
+			DocumentLoader xmlFileDocumentLoader =
 					new DocumentLoader( xmlFileLoader );
 			xmlFileDocumentLoader.loadResourceXmlDir( xmlResourceDir );
 		}
@@ -301,7 +301,7 @@ public class ResourceLoader {
 	private File getPreferenceResourceDir( File xmlResourceDir ) {
 		return xmlResourceDir != null ? new File( xmlResourceDir, "xml" ) : null;
 	}
-	
+
 	private String getPathToAndroidResources() {
 		String resourcePath;
 		if ( ( resourcePath = getAndroidResourcePathFromLocalProperties() ) != null ) {
@@ -456,12 +456,12 @@ public class ResourceLoader {
 		init();
 		return integerResourceLoader.getValue( id );
 	}
-	
+
 	public boolean getBooleanValue( int id ) {
 		init();
 		return boolResourceLoader.getValue( id );
 	}
-	
+
 	public XmlResourceParser getXml( int id ) {
 		init();
 		return xmlFileLoader.getXml( id );
