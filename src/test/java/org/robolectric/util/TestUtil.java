@@ -95,7 +95,7 @@ public abstract class TestUtil {
     }
 
     public static AndroidManifest newConfig(String androidManifestFile) {
-        return new AndroidManifest(resourceFile(androidManifestFile), (File) null, (File) null);
+        return new AndroidManifest(resourceFile(androidManifestFile), null, null);
     }
 
     public static String readString(InputStream is) throws IOException {

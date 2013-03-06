@@ -97,7 +97,7 @@ public class AndroidManifestTest {
                         "          package=\"org.robolectric\">\n" +
                         "    <uses-sdk " + usesSdkAttrs + "/>\n" +
                         "</manifest>\n");
-        return new AndroidManifest(f, (File) null, (File) null);
+        return new AndroidManifest(f, null, null);
     }
 
     private List<String> stringify(List<ResourcePath> resourcePaths) {

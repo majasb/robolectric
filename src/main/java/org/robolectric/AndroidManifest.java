@@ -23,7 +23,6 @@ import static android.content.pm.ApplicationInfo.*;
 public class AndroidManifest {
     private final File androidManifestFile;
     private final File resDirectory;
-    private final List<File> libraryResourceDirectories;
     private final File assetsDirectory;
     private String rClassName;
     private String packageName;
@@ -36,58 +35,32 @@ public class AndroidManifest {
     private final List<ReceiverAndIntentFilter> receivers = new ArrayList<ReceiverAndIntentFilter>();
     private List<AndroidManifest> libraryManifests;
 
+    /**
+     * Creates a Robolectric configuration using default Android files relative to the specified base directory.
+     * <p/>
+     * The manifest will be baseDir/AndroidManifest.xml, res will be baseDir/res, and assets in baseDir/assets.
+     *
+     * @param baseDir the base directory of your Android project
+     */
     public AndroidManifest(final File baseDir) {
-        this(getManifestFile(baseDir), getResourceDir(baseDir), getAssetsDir(baseDir));
+        this(new File(baseDir, "AndroidManifest.xml"), new File(baseDir, "res"), new File(baseDir, "assets"));
     }
 
     public AndroidManifest(final File androidManifestFile, final File resDirectory) {
-        this(androidManifestFile, resDirectory, getAssetsDir(resDirectory.getParentFile()));
-    }
-
-    public AndroidManifest(final File androidManifestFile, final File resDirectory,
-			   final List<File> libraryResourceSirectories) {
-        this(androidManifestFile, resDirectory, getAssetsDir(resDirectory.getParentFile()),
-             libraryResourceSirectories);
+        this(androidManifestFile, resDirectory, new File(resDirectory.getParent(), "assets"));
     }
 
     /**
-     * Creates a manifest using specified locations.
+     * Creates a Robolectric configuration using specified locations.
      *
      * @param androidManifestFile location of the AndroidManifest.xml file
-     * @param resourceDirectory   location of the res directory
+     * @param resDirectory        location of the res directory
      * @param assetsDirectory     location of the assets directory
-     * @param libraryResourceDirectories location of the resource directories of android library projects
      */
-    public AndroidManifest(final File androidManifestFile, final File resDirectory, final File assetsDirectory,
-			   final List<File> libraryResourceDirectories) {
+    public AndroidManifest(File androidManifestFile, File resDirectory, File assetsDirectory) {
         this.androidManifestFile = androidManifestFile;
         this.resDirectory = resDirectory;
         this.assetsDirectory = assetsDirectory;
-        this.libraryResourceDirectories = Collections.unmodifiableList(new ArrayList<File>(libraryResourceDirectories));
-    }
-
-    public AndroidManifest(File androidManifestFile, File resDirectory, File assetsDirectory) {
-        this(androidManifestFile, resDirectory, assetsDirectory, Collections.<File>emptyList());
-    }
-
-    private static File getManifestFile(File baseDir) {
-        return new File(baseDir, "AndroidManifest.xml");
-    }
-
-    private static List<File> getResourceDirs(List<File> libraryBaseDirs) {
-        List<File> dirs = new ArrayList<File>();
-        for (File libraryBaseDir : libraryBaseDirs) {
-            dirs.add(getResourceDir(libraryBaseDir));
-        }
-        return dirs;
-    }
-
-    private static File getResourceDir(File baseDir) {
-        return new File(baseDir, "res");
-    }
-
-    private static File getAssetsDir(File baseDir) {
-        return new File(baseDir, "assets");
     }
 
     public String getRClassName() throws Exception {
@@ -324,10 +297,6 @@ public class AndroidManifest {
 
     public File getAssetsDirectory() {
         return assetsDirectory;
-    }
-
-    public List<File> getLibraryResourceDirectories() {
-        return libraryResourceDirectories;
     }
 
     public int getReceiverCount() {
