@@ -4,7 +4,6 @@ import org.robolectric.util.I18nException;
 
 public class PackageResourceLoader extends XResourceLoader {
     ResourcePath resourcePath;
-    ResourceIndex resourceIndex;
 
     public PackageResourceLoader(ResourcePath resourcePath) {
         super(new ResourceExtractor(resourcePath));

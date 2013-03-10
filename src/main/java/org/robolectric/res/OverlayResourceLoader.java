@@ -2,6 +2,7 @@ package org.robolectric.res;
 
 import android.view.View;
 
+import java.io.InputStream;
 import java.util.List;
 
 public class OverlayResourceLoader extends XResourceLoader {
@@ -58,4 +59,18 @@ public class OverlayResourceLoader extends XResourceLoader {
         }
         return null;
     }
+
+    @Override
+    public InputStream getRawValue(int id) {
+        initialize();
+
+        for (PackageResourceLoader resourceLoader : subResourceLoaders) {
+            InputStream stream = resourceLoader.getRawValue(id);
+            if (stream != null) {
+                return stream;
+            }
+        }
+        return null;
+    }
+
 }

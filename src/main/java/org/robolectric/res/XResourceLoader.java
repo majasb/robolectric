@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 abstract class XResourceLoader implements ResourceLoader {
-    private final ResourceIndex resourceIndex;
+    final ResourceIndex resourceIndex;
 
     final List<RawResourceLoader> rawResourceLoaders = new ArrayList<RawResourceLoader>();
 
