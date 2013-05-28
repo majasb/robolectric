@@ -3,56 +3,67 @@ package org.robolectric.res;
 import org.robolectric.util.I18nException;
 
 public class PackageResourceLoader extends XResourceLoader {
-    ResourcePath resourcePath;
+  ResourcePath resourcePath;
 
-    public PackageResourceLoader(ResourcePath resourcePath) {
-        super(new ResourceExtractor(resourcePath));
-        this.resourcePath = resourcePath;
+  public PackageResourceLoader(ResourcePath resourcePath) {
+    this(resourcePath, new ResourceExtractor(resourcePath));
+  }
+
+  public PackageResourceLoader(ResourcePath resourcePath, ResourceIndex resourceIndex) {
+    super(resourceIndex);
+    this.resourcePath = resourcePath;
+  }
+
+  void doInitialize() {
+    try {
+      loadEverything();
+    } catch (I18nException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    void doInitialize() {
-        try {
-            loadEverything();
-        } catch (I18nException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+  private void loadEverything() throws Exception {
+    System.out.println("DEBUG: Loading resources for " + resourcePath.getPackageName() + " from " + resourcePath.resourceBase + "...");
 
-    private void loadEverything() throws Exception {
-        System.out.println("DEBUG: Loading resources for " + resourcePath.getPackageName() + " from " + resourcePath.resourceBase + "...");
+    DocumentLoader documentLoader = new DocumentLoader(resourcePath);
+    documentLoader.load("values",
+        new ValueResourceLoader(data, "/resources/bool", "bool", ResType.BOOLEAN),
+        new ValueResourceLoader(data, "/resources/color", "color", ResType.COLOR),
+        new ValueResourceLoader(data, "/resources/dimen", "dimen", ResType.DIMEN),
+        new ValueResourceLoader(data, "/resources/integer", "integer", ResType.INTEGER),
+        new ValueResourceLoader(data, "/resources/integer-array", "array", ResType.INTEGER_ARRAY),
+        new PluralResourceLoader(pluralsData),
+        new ValueResourceLoader(data, "/resources/string", "string", ResType.CHAR_SEQUENCE),
+        new ValueResourceLoader(data, "/resources/string-array", "array", ResType.CHAR_SEQUENCE_ARRAY),
+        new AttrResourceLoader(data),
+        new StyleResourceLoader(data)
+    );
 
-        new DocumentLoader(
-                new ValueResourceLoader(booleanResolver, "bool", false),
-                new ValueResourceLoader(colorResolver, "color", false),
-                new ValueResourceLoader(dimenResolver, "dimen", false),
-                new ValueResourceLoader(integerResolver, "integer", true),
-                new PluralResourceLoader(resourceIndex, pluralsResolver),
-                new ValueResourceLoader(stringResolver, "string", true),
-                attrResourceLoader
-        ).loadResourceXmlSubDirs(resourcePath, "values");
+    documentLoader.load("layout", new OpaqueFileLoader(data, "layout"));
+    documentLoader.load("menu", new MenuLoader(menuData));
+    documentLoader.load("drawable", new OpaqueFileLoader(data, "drawable"));
+    documentLoader.load("anim", new OpaqueFileLoader(data, "anim"));
+    documentLoader.load("color", new ColorResourceLoader(data));
+    documentLoader.load("xml", new PreferenceLoader(preferenceData), new XmlFileLoader(xmlDocuments));
+    new DrawableResourceLoader(drawableData).findDrawableResources(resourcePath);
+    new RawResourceLoader(resourcePath).loadTo(rawResources);
 
-        new DocumentLoader(new ViewLoader(viewNodes)).loadResourceXmlSubDirs(resourcePath, "layout");
-        new DocumentLoader(new MenuLoader(menuNodes)).loadResourceXmlSubDirs(resourcePath, "menu");
-        DrawableResourceLoader drawableResourceLoader = new DrawableResourceLoader(drawableNodes);
-        drawableResourceLoader.findNinePatchResources(resourcePath);
-        new DocumentLoader(drawableResourceLoader).loadResourceXmlSubDirs(resourcePath, "drawable");
-        new DocumentLoader(new PreferenceLoader(preferenceNodes)).loadResourceXmlSubDirs(resourcePath, "xml");
-        new DocumentLoader(new XmlFileLoader(xmlDocuments)).loadResourceXmlSubDirs(resourcePath, "xml");
+    loadOtherResources(resourcePath);
+  }
 
-        loadOtherResources(resourcePath);
+  protected void loadOtherResources(ResourcePath resourcePath) {
+  }
 
-        rawResourceLoaders.add(new RawResourceLoader(resourceIndex, resourcePath.resourceBase));
-    }
+  @Override
+  public String toString() {
+    return "PackageResourceLoader{" +
+        "resourcePath=" + resourcePath +
+        '}';
+  }
 
-    protected void loadOtherResources(ResourcePath resourcePath) {
-    }
-
-    @Override
-    public String toString() {
-        return "PackageResourceLoader{" +
-                "resourcePath=" + resourcePath +
-                '}';
-    }
+  @Override public boolean providesFor(String namespace) {
+    return resourcePath.getPackageName().equals(namespace);
+  }
 }

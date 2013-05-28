@@ -1,72 +1,61 @@
 package org.robolectric.shadows;
 
-import android.content.ContentProviderOperation;
-import android.content.ContentProviderOperation.Builder;
-import android.net.Uri;
+import static org.fest.assertions.api.Assertions.assertThat;
+
+import java.util.Collections;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.TestRunners;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import android.content.ContentProviderOperation;
+import android.net.Uri;
 
+/**
+ * Tests for {@link ShadowContentProviderOperation}.
+ */
 @RunWith(TestRunners.WithDefaults.class)
 public class ContentProviderOperationTest {
 
-    @Test
-    public void newInsert() {
-        final Uri URI = Uri.parse("content://org.robolectric");
-        Builder builder = ContentProviderOperation.newInsert(URI);
-        builder.withValue("stringValue", "bar");
-        builder.withValue("intValue", 5);
-        ContentProviderOperation operation = builder.build();
-        ShadowContentProviderOperation shadowOperation = Robolectric.shadowOf(operation);
-        assertThat(operation.getUri()).isEqualTo(URI);
-        assertThat(shadowOperation.isInsert()).isTrue();
-        assertThat(shadowOperation.isUpdate()).isFalse();
-        assertThat(shadowOperation.isDelete()).isFalse();
-        assertThat(shadowOperation.getValues().size()).isEqualTo(2);
-        assertThat(shadowOperation.getValues().get("stringValue").toString()).isEqualTo("bar");
-        assertThat(Integer.parseInt(shadowOperation.getValues().get("intValue").toString())).isEqualTo(5);
-    }
-    
-    @Test
-    public void newInsertWithValueBackReference() {
-        final Uri URI = Uri.parse("content://org.robolectric");
-        Builder builder = ContentProviderOperation.newInsert(URI);
-        builder.withValueBackReference("my_id", 0);
-        ContentProviderOperation operation = builder.build();
-        ShadowContentProviderOperationBuilder shadowBuilder = Robolectric.shadowOf(builder);
-        ShadowContentProviderOperation shadowOperation = Robolectric.shadowOf(operation);
-        assertThat(shadowBuilder.getWithValueBackReference("my_id")).isEqualTo(0);
-        assertThat(shadowOperation.getWithValueBackReference("my_id")).isEqualTo(0);
-    }
+  @Test
+  public void reflectionShouldWork() {
+    final Uri uri = Uri.parse("content://authority/path");
 
-    @Test
-    public void newUpdate() {
-        final Uri URI = Uri.parse("content://org.robolectric");
-        Builder builder = ContentProviderOperation.newUpdate(URI);
-        builder.withSelection("id_column", new String[] { "5" });
-        ContentProviderOperation operation = builder.build();
-        ShadowContentProviderOperation shadowOperation = Robolectric.shadowOf(operation);
-        assertThat(operation.getUri()).isEqualTo(URI);
-        assertThat(shadowOperation.isInsert()).isFalse();
-        assertThat(shadowOperation.isUpdate()).isTrue();
-        assertThat(shadowOperation.isDelete()).isFalse();
-        assertThat(shadowOperation.getSelections().get("id_column")).isEqualTo(new String[]{"5"});
-    }
+    ContentProviderOperation op = ContentProviderOperation.newInsert(uri)
+        .withValue("insertKey", "insertValue")
+        .withValueBackReference("backKey", 2)
+        .build();
 
-    @Test
-    public void newDelete() {
-        final Uri URI = Uri.parse("content://org.robolectric");
-        Builder builder = ContentProviderOperation.newDelete(URI);
-        builder.withSelection("id_column", new String[] { "5" });
-        ContentProviderOperation operation = builder.build();
-        ShadowContentProviderOperation shadowOperation = Robolectric.shadowOf(operation);
-        assertThat(operation.getUri()).isEqualTo(URI);
-        assertThat(shadowOperation.isInsert()).isFalse();
-        assertThat(shadowOperation.isUpdate()).isFalse();
-        assertThat(shadowOperation.isDelete()).isTrue();
-        assertThat(shadowOperation.getSelections().get("id_column")).isEqualTo(new String[]{"5"});
-    }
+    // insert and values back references
+    assertThat(op.getUri()).isEqualTo(uri);
+    ShadowContentProviderOperation shadow = Robolectric.shadowOf(op);
+    assertThat(shadow.getType()).isEqualTo(ShadowContentProviderOperation.TYPE_INSERT);
+    assertThat(shadow.getContentValues().getAsString("insertKey")).isEqualTo("insertValue");
+    assertThat(shadow.getValuesBackReferences().getAsInteger("backKey")).isEqualTo(2);
+
+    // update and selection back references
+    op = ContentProviderOperation.newUpdate(uri)
+        .withValue("updateKey", "updateValue")
+        .withSelection("a=? and b=?", new String[] {"abc"})
+        .withSelectionBackReference(1, 3)
+        .build();
+    assertThat(op.getUri()).isEqualTo(uri);
+    shadow = Robolectric.shadowOf(op);
+    assertThat(shadow.getType()).isEqualTo(ShadowContentProviderOperation.TYPE_UPDATE);
+    assertThat(shadow.getContentValues().getAsString("updateKey")).isEqualTo("updateValue");
+    assertThat(shadow.getSelection()).isEqualTo("a=? and b=?");
+    assertThat(shadow.getSelectionArgs()).containsExactly("abc");
+    assertThat(shadow.getSelectionArgsBackReferences()).isEqualTo(Collections.<Integer, Integer>singletonMap(1, 3));
+
+    // delete and expected count
+    op = ContentProviderOperation.newDelete(uri)
+        .withExpectedCount(1)
+        .build();
+    assertThat(op.getUri()).isEqualTo(uri);
+    shadow = Robolectric.shadowOf(op);
+    assertThat(shadow.getType()).isEqualTo(ShadowContentProviderOperation.TYPE_DELETE);
+    assertThat(shadow.getExpectedCount()).isEqualTo(1);
+  }
+
 }

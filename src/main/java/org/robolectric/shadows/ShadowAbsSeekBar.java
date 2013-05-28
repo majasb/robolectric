@@ -1,11 +1,11 @@
 package org.robolectric.shadows;
 
 import android.widget.AbsSeekBar;
-import org.robolectric.internal.Implements;
+import org.robolectric.annotation.Implements;
 
-@Implements(AbsSeekBar.class)
+@Implements(value = AbsSeekBar.class)
 public class ShadowAbsSeekBar extends ShadowProgressBar {
-    
-    boolean mIsUserSeekable = true;
-    
+
+  boolean mIsUserSeekable = true;
+
 }

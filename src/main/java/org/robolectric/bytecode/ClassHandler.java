@@ -1,14 +1,17 @@
 package org.robolectric.bytecode;
 
 public interface ClassHandler {
-    void reset();
+  void classInitializing(Class clazz);
 
-    void classInitializing(Class clazz);
+  Object initializing(Object instance);
 
-    Object methodInvoked(Class clazz, String methodName, Object instance, String[] paramTypes, Object[] params) throws Throwable;
+  Plan methodInvoked(String signature, boolean isStatic, Class<?> theClass);
 
-    Object intercept(String className, String methodName, Object instance, Object[] paramTypes, Object[] params) throws Throwable;
+  Object intercept(String signature, Object instance, Object[] params, Class theClass) throws Throwable;
 
-    // todo: definitely shouldn't live here
-    void setStrictI18n(boolean strictI18n);
+  <T extends Throwable> T stripStackTrace(T throwable);
+
+  public interface Plan {
+    Object run(Object instance, Object roboData, Object[] params) throws Throwable;
+  }
 }

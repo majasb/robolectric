@@ -1,110 +1,126 @@
 package org.robolectric;
 
-import android.app.Application;
-import android.content.res.Resources;
-import android.widget.TextView;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.junit.runners.model.InitializationError;
-import org.robolectric.annotation.DisableStrictI18n;
-import org.robolectric.annotation.EnableStrictI18n;
-import org.robolectric.annotation.Values;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowView;
+import org.robolectric.shadows.ShadowViewGroup;
 
-import static org.junit.Assert.*;
-import static org.robolectric.Robolectric.shadowOf;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Properties;
 
-@RunWith(RobolectricTestRunnerTest.RunnerForTesting.class)
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.reflect.core.Reflection.method;
+
 public class RobolectricTestRunnerTest {
+  @Test public void whenClassHasConfigAnnotation_getConfig_shouldMergeClassAndMethodConfig() throws Exception {
+    assertConfig(configFor(Test1.class, "withoutAnnotation"),
+        1, "foo", "from-test", 2, new Class[]{Test1.class});
 
-    @Test
-    public void shouldInitializeAndBindApplicationButNotCallOnCreate() throws Exception {
-        assertNotNull(Robolectric.application);
-        assertEquals(MyTestApplication.class, Robolectric.application.getClass());
-        assertFalse(((MyTestApplication) Robolectric.application).onCreateWasCalled);
-        assertNotNull(shadowOf(Robolectric.application).getResourceLoader());
+    assertConfig(configFor(Test1.class, "withDefaultsAnnotation"),
+        1, "foo", "from-test", 2, new Class[]{Test1.class});
+
+    assertConfig(configFor(Test1.class, "withOverrideAnnotation"),
+        9, "furf", "from-method", 8, new Class[]{Test1.class, Test2.class});
+  }
+
+  @Test public void whenClassDoesntHaveConfigAnnotation_getConfig_shouldUseMethodConfig() throws Exception {
+    assertConfig(configFor(Test2.class, "withoutAnnotation"),
+        -1, "--default", "", -1, new Class[]{});
+
+    assertConfig(configFor(Test2.class, "withDefaultsAnnotation"),
+        -1, "--default", "", -1, new Class[]{});
+
+    assertConfig(configFor(Test2.class, "withOverrideAnnotation"),
+        9, "furf", "from-method", 8, new Class[]{Test1.class});
+  }
+
+  @Test public void shouldLoadDefaultsFromPropertiesFile() throws Exception {
+    Properties properties = properties(
+        "emulateSdk: 432\n" +
+            "manifest: --none\n" +
+            "qualifiers: from-properties-file\n" +
+            "reportSdk: 234\n" +
+            "shadows: org.robolectric.shadows.ShadowView, org.robolectric.shadows.ShadowViewGroup\n");
+    assertConfig(configFor(Test2.class, "withoutAnnotation", properties),
+        432, "--none", "from-properties-file", 234, new Class[] {ShadowView.class, ShadowViewGroup.class});
+  }
+
+  @Test public void withEmptyShadowList_shouldLoadDefaultsFromPropertiesFile() throws Exception {
+    Properties properties = properties("shadows:");
+    assertConfig(configFor(Test2.class, "withoutAnnotation", properties),
+        -1, "--default", "", -1, new Class[] {});
+  }
+
+  private Config configFor(Class<?> testClass, String methodName, final Properties configProperties) throws InitializationError {
+    return new RobolectricTestRunner(testClass) {
+      @Override protected Properties getConfigProperties() {
+        return configProperties;
+      }
+    }.getConfig(method(methodName).withParameterTypes().in(testClass).info());
+  }
+
+  private Config configFor(Class<?> testClass, String methodName) throws InitializationError {
+    return new RobolectricTestRunner(testClass)
+          .getConfig(method(methodName).withParameterTypes().in(testClass).info());
+  }
+
+  private void assertConfig(Config config, int emulateSdk, String manifest, String qualifiers, int reportSdk, Class[] shadows) {
+    assertThat(stringify(config)).isEqualTo(stringify(emulateSdk, manifest, qualifiers, reportSdk, shadows));
+  }
+
+  @Ignore @Config(emulateSdk = 1, manifest = "foo", reportSdk = 2, shadows = Test1.class, qualifiers = "from-test")
+  public static class Test1 {
+    @Test public void withoutAnnotation() throws Exception {
     }
 
-    @Test public void shouldSetUpSystemResources() throws Exception {
-        assertNotNull(Resources.getSystem());
-        assertEquals(Robolectric.application.getResources().getString(android.R.string.copy),
-                Resources.getSystem().getString(android.R.string.copy));
-
-        assertNotNull(Robolectric.application.getResources().getString(R.string.howdy));
-        try {
-            Resources.getSystem().getString(R.string.howdy);
-            fail("should have thrown");
-        } catch (Resources.NotFoundException e) {
-        }
+    @Config
+    @Test public void withDefaultsAnnotation() throws Exception {
     }
 
-    @Test
-    public void setStaticValue_shouldIgnoreFinalModifier() {
-        RobolectricContext.setStaticValue(android.os.Build.class, "MODEL", "expected value");
+    @Config(emulateSdk = 9, manifest = "furf", reportSdk = 8, shadows = Test2.class, qualifiers = "from-method")
+    @Test public void withOverrideAnnotation() throws Exception {
+    }
+  }
 
-        assertEquals("expected value", android.os.Build.MODEL);
+  @Ignore
+  public static class Test2 {
+    @Test public void withoutAnnotation() throws Exception {
     }
 
-    @Test
-    @EnableStrictI18n
-    public void internalBeforeTest_setsShadowApplicationStrictI18n() {
-        assertTrue(Robolectric.getShadowApplication().isStrictI18n());
+    @Config
+    @Test public void withDefaultsAnnotation() throws Exception {
     }
 
-    @Test
-    @DisableStrictI18n
-    public void internalBeforeTest_clearsShadowApplicationStrictI18n() {
-        assertFalse(Robolectric.getShadowApplication().isStrictI18n());
+    @Config(emulateSdk = 9, manifest = "furf", reportSdk = 8, shadows = Test1.class, qualifiers = "from-method")
+    @Test public void withOverrideAnnotation() throws Exception {
     }
+  }
 
-    @Test
-    @Values(qualifiers = "fr")
-    public void internalBeforeTest_testValuesResQualifiers() {
-        assertEquals("fr", Robolectric.shadowOf(Robolectric.getShadowApplication().getResources().getConfiguration()).getQualifiers());
-    }
+  private String stringify(Config config) {
+    int emulateSdk = config.emulateSdk();
+    String manifest = config.manifest();
+    String qualifiers = config.qualifiers();
+    int reportSdk = config.reportSdk();
+    Class<?>[] shadows = config.shadows();
+    return stringify(emulateSdk, manifest, qualifiers, reportSdk, shadows);
+  }
 
-    @Test
-    public void internalBeforeTest_resetsValuesResQualifiers() {
-        assertEquals("", Robolectric.shadowOf(Robolectric.getShadowApplication().getResources().getConfiguration()).getQualifiers());
-    }
+  private String stringify(int emulateSdk, String manifest, String qualifiers, int reportSdk, Class<?>[] shadows) {
+    return "emulateSdk=" + emulateSdk + "\n" +
+        "manifest=" + manifest + "\n" +
+        "qualifiers=" + qualifiers + "\n" +
+        "reportSdk=" + reportSdk + "\n" +
+        "shadows=" + Arrays.toString(shadows);
+  }
 
-    @Test
-    public void internalBeforeTest_doesNotSetI18nStrictModeFromSystemIfPropertyAbsent() {
-        assertFalse(Robolectric.getShadowApplication().isStrictI18n());
-    }
-
-    @Test
-    @EnableStrictI18n
-    public void methodBlock_setsI18nStrictModeForClassHandler() {
-        TextView tv = new TextView(Robolectric.application);
-        try {
-            tv.setText("Foo");
-            fail("TextView#setText(String) should produce an i18nException");
-        } catch (Exception e) {
-            // Compare exception name because it was loaded in the instrumented classloader
-            assertEquals("org.robolectric.util.I18nException", e.getClass().getName());
-        }
-    }
-
-    public static class RunnerForTesting extends TestRunners.WithDefaults {
-        public static RunnerForTesting instance;
-        private final AndroidManifest androidManifest;
-
-        public RunnerForTesting(Class<?> testClass) throws InitializationError {
-            super(testClass);
-            instance = this;
-            androidManifest = getRobolectricContext().getAppManifest();
-        }
-
-        @Override protected Application createApplication() {
-            return new MyTestApplication();
-        }
-    }
-
-    public static class MyTestApplication extends Application {
-        private boolean onCreateWasCalled;
-
-        @Override public void onCreate() {
-            this.onCreateWasCalled = true;
-        }
-    }
+  private Properties properties(String s) throws IOException {
+    StringReader reader = new StringReader(s);
+    Properties properties = new Properties();
+    properties.load(reader);
+    return properties;
+  }
 }

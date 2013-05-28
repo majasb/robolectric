@@ -10,49 +10,39 @@ import org.robolectric.Robolectric;
 import org.robolectric.TestRunners;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertSame;
 import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(TestRunners.WithDefaults.class)
 public class LinearLayoutTest {
-    private LinearLayout linearLayout;
-    private LinearLayout contextFreeLinearLayout;
+  private LinearLayout linearLayout;
 
-    @Before
-    public void setup() throws Exception {
-        linearLayout = new LinearLayout(Robolectric.application);
-        contextFreeLinearLayout = new LinearLayout(null);
-    }
+  @Before
+  public void setup() throws Exception {
+    linearLayout = new LinearLayout(Robolectric.application);
+  }
 
-    @Test
-    public void getLayoutParams_shouldReturnLinearLayoutParams() throws Exception {
-        ViewGroup.LayoutParams layoutParams =contextFreeLinearLayout.getLayoutParams();
+  @Test
+  public void getLayoutParams_shouldReturnTheSameLinearLayoutParamsFromTheSetter() throws Exception {
+    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(1, 2);
+    linearLayout.setLayoutParams(params);
 
-        assertThat(layoutParams).isInstanceOf(LinearLayout.LayoutParams.class);
-    }
+    assertSame(params, linearLayout.getLayoutParams());
+  }
 
-    @Test
-    public void getLayoutParams_shouldReturnTheSameLinearLayoutParamsFromTheSetter() throws Exception {
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(1, 2);
+  @Test
+  public void canAnswerOrientation() throws Exception {
+    assertThat(linearLayout.getOrientation()).isEqualTo(LinearLayout.HORIZONTAL);
+    linearLayout.setOrientation(LinearLayout.VERTICAL);
+    assertThat(linearLayout.getOrientation()).isEqualTo(LinearLayout.VERTICAL);
+    linearLayout.setOrientation(LinearLayout.HORIZONTAL);
+    assertThat(linearLayout.getOrientation()).isEqualTo(LinearLayout.HORIZONTAL);
+  }
 
-        contextFreeLinearLayout.setLayoutParams(params);
-
-        assertTrue(contextFreeLinearLayout.getLayoutParams() == params);
-    }
-
-    @Test
-    public void canAnswerOrientation() throws Exception {
-        assertThat(linearLayout.getOrientation()).isEqualTo(LinearLayout.HORIZONTAL);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-        assertThat(linearLayout.getOrientation()).isEqualTo(LinearLayout.VERTICAL);
-        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
-        assertThat(linearLayout.getOrientation()).isEqualTo(LinearLayout.HORIZONTAL);
-    }
-
-    @Test
-    public void canAnswerGravity() throws Exception {
-        assertThat(shadowOf(linearLayout).getGravity()).isEqualTo(Gravity.TOP | Gravity.START);
-        linearLayout.setGravity(Gravity.CENTER_VERTICAL);
-        assertThat(shadowOf(linearLayout).getGravity()).isEqualTo(Gravity.CENTER_VERTICAL);
-    }
+  @Test
+  public void canAnswerGravity() throws Exception {
+    assertThat(shadowOf(linearLayout).getGravity()).isEqualTo(Gravity.TOP | Gravity.START);
+    linearLayout.setGravity(Gravity.CENTER_VERTICAL);
+    assertThat(shadowOf(linearLayout).getGravity()).isEqualTo(Gravity.CENTER_VERTICAL);
+  }
 }
