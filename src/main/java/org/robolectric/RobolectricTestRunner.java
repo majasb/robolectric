@@ -307,7 +307,7 @@ public class RobolectricTestRunner extends BlockJUnit4ClassRunner {
       return null;
     }
 
-    FsFile fsFile = Fs.currentDirectory();
+    FsFile fsFile = getTestRunDirectory();
     String manifestStr = config.manifest().equals(Config.DEFAULT) ? "AndroidManifest.xml" : config.manifest();
     FsFile manifestFile = fsFile.join(manifestStr);
     synchronized (envHolder) {
@@ -324,6 +324,10 @@ public class RobolectricTestRunner extends BlockJUnit4ClassRunner {
       }
       return appManifest;
     }
+  }
+
+  protected FsFile getTestRunDirectory() {
+    return Fs.currentDirectory();
   }
 
   public Config getConfig(Method method) {
