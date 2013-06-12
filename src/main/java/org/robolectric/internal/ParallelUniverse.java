@@ -13,10 +13,12 @@ import org.robolectric.RoboInstrumentation;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.TestLifecycle;
+import org.robolectric.annotation.Config;
 import org.robolectric.res.ResourceLoader;
 import org.robolectric.res.builder.RobolectricPackageManager;
 import org.robolectric.shadows.ShadowActivityThread;
 import org.robolectric.shadows.ShadowContextImpl;
+import org.robolectric.shadows.ShadowLog;
 import org.robolectric.shadows.ShadowResources;
 import org.robolectric.util.DatabaseConfig;
 
@@ -29,16 +31,22 @@ import static org.robolectric.Robolectric.shadowOf;
 public class ParallelUniverse implements ParallelUniverseInterface {
   private static final String DEFAULT_PACKAGE_NAME = "org.robolectric.default";
   private Class<?> contextImplClass;
+  private boolean loggingInitialized = false;
 
   public void resetStaticState() {
     Robolectric.reset();
+
+    if (!loggingInitialized) {
+      ShadowLog.setupLogging();
+      loggingInitialized = true;
+    }
   }
 
   @Override public void setDatabaseMap(DatabaseConfig.DatabaseMap databaseMap) {
     DatabaseConfig.setDatabaseMap(databaseMap);
   }
 
-  @Override public void setUpApplicationState(Method method, TestLifecycle testLifecycle, boolean strictI18n, ResourceLoader systemResourceLoader, AndroidManifest appManifest) {
+  @Override public void setUpApplicationState(Method method, TestLifecycle testLifecycle, boolean strictI18n, ResourceLoader systemResourceLoader, AndroidManifest appManifest, Config config) {
     Robolectric.application = null;
     Robolectric.packageManager = new RobolectricPackageManager();
     Robolectric.packageManager.addPackage(DEFAULT_PACKAGE_NAME);
@@ -47,7 +55,7 @@ public class ParallelUniverse implements ParallelUniverseInterface {
     }
 
     ShadowResources.setSystemResources(systemResourceLoader);
-    String qualifiers = RobolectricTestRunner.determineResourceQualifiers(method);
+    String qualifiers = config.qualifiers();
     Resources systemResources = Resources.getSystem();
     Configuration configuration = systemResources.getConfiguration();
     shadowOf(configuration).overrideQualifiers(qualifiers);
