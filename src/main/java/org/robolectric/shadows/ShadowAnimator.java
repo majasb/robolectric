@@ -30,7 +30,19 @@ public class ShadowAnimator {
     }
   }
 
-  @Implementation
+  protected void notifyCancel() {
+    for (AnimatorListener listener : listeners) {
+      listener.onAnimationCancel(realObject);
+    }
+  }
+
+  protected void notifyRepeat() {
+    for (AnimatorListener listener : listeners) {
+      listener.onAnimationRepeat(realObject);
+    }
+  }
+
+    @Implementation
   public void addListener(AnimatorListener listener) {
     listeners.add(listener);
   }
