@@ -16,7 +16,7 @@ import java.util.Map;
 
 
 @SuppressWarnings({"UnusedDeclaration"})
-@Implements(ObjectAnimator.class)
+@Implements(value = ObjectAnimator.class, inheritImplementationMethods = true)
 public class ShadowObjectAnimator extends ShadowValueAnimator {
   private static boolean pausingEndNotifications;
   private static List<ShadowObjectAnimator> pausedEndNotifications = new ArrayList<ShadowObjectAnimator>();

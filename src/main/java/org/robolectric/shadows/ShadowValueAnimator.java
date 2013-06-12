@@ -6,7 +6,7 @@ import android.view.animation.LinearInterpolator;
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
 
-@Implements(ValueAnimator.class)
+@Implements(value = ValueAnimator.class, inheritImplementationMethods = true)
 public class ShadowValueAnimator extends ShadowAnimator {
   private TimeInterpolator interpolator;
 
